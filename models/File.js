@@ -1,25 +1,55 @@
 import mongoose from "mongoose";
 
 const fileSchema = new mongoose.Schema({
-  name: String,
-  mobile: Number,
-  dob: Date,
-  email: String,
-  permanentadd: String,
-  presentadd: String,
-  pincode: String,
-  institutename: String,
-  education: String,
-  currentstatus: String,
-  techopted: String,
-  duration: String,
-  fees: Number,
-  pendingfees: Number,
-  referedby: String,
-  photo: String,
-  aadhar: String,
-
-  // Fields for offer letter
+  // Personal Information
+  name: { type: String, required: true },
+  mobile: { type: String, required: true }, // Changed to String to match form
+  dob: { type: String, required: true },
+  gender: { type: String, enum: ["male", "female", "other"], required: true }, // Added
+  email: { type: String, required: true },
+  
+  // Address Information
+  permanentadd: { type: String, required: true },
+  presentadd: { type: String, required: true },
+  pincode: { type: String, required: true },
+  
+  // Education Information
+  institutename: { type: String, required: true },
+  education: { type: String, required: true },
+  currentstatus: { type: String, required: true },
+  
+  // Internship Information
+  techopted: { 
+    type: String, 
+    required: true,
+    enum: [
+      "Frontend Development Internship",
+      "Backend Development Internship",
+      "Fullstack Development Internship",
+      "MERN Stack Development Internship",
+      "UI/UX Design Internship",
+      "Data Analysis Internship",
+      "App Development Internship",
+      "Cyber Security Internship",
+      "PHP Development Internship",
+      "Python Internship",
+      "AI/ML Internship"
+    ]
+  },
+  duration: { type: String, required: true },
+  startDate: { type: String, required: true }, // Added from form
+  endDate: { type: String, required: true },   // Added from form
+  
+  // Financial Information
+  fees: { type: Number, required: true },
+  pendingfees: { type: Number, required: true },
+  referedby: { type: String, required: true },
+  
+  // Documents
+  photo: { type: String, required: true },
+  aadhar: { type: String, required: true },
+  
+  // Offer Letter Fields
   internshipDate: String,
   startDate: String,
   responsibilities: String,
@@ -29,8 +59,8 @@ const fileSchema = new mongoose.Schema({
     enum: ["offered", "pending"],
     default: "pending",
   },
-
-  // Fields for review status
+  
+  // Review Fields
   description: {
     type: String,
     default: "",
@@ -40,8 +70,8 @@ const fileSchema = new mongoose.Schema({
     enum: ["reviewed", "unreviewed"],
     default: "unreviewed",
   },
-
-  // New fields for completion letter
+  
+  // Completion Letter Fields
   completionDate: String,
   completionTo: String,
   completionName: String,
@@ -54,8 +84,10 @@ const fileSchema = new mongoose.Schema({
     type: String,
     enum: ["sent", "pending"],
     default: "pending",
-  },
-}, { timestamps: true });
+  }
+}, { 
+  timestamps: true,
+});
 
 const File = mongoose.model('File', fileSchema);
 

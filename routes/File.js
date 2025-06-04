@@ -23,7 +23,6 @@ dotenv.config();
 const router = express.Router();
 
 
-// Add this helper function at the top of the file
 const formatDate = (date) => {
   if (!date) return '';
   
@@ -32,7 +31,7 @@ const formatDate = (date) => {
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
   
-  return `${day}/${month}/${year}`;
+  return `${day}/${month}/${year}`; // "02/06/2025"
 };
 
 
@@ -65,115 +64,161 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// POST route for uploading
+
 router.post('/upload', upload.fields([{ name: 'photo' }, { name: 'aadhar' }]), async (req, res) => {
   const {
-    name, mobile, dob, email, permanentadd, presentadd, pincode,
+    name, mobile, dob, gender, email, permanentadd, presentadd, pincode,
     institutename, education, currentstatus, techopted, duration,
-    fees, pendingfees, referedby
+    fees, pendingfees, referedby, startDate, endDate
   } = req.body;
 
   try {
+    // Handle file uploads
     const photoFile = req.files['photo'] ? req.files['photo'][0].filename : null;
     const aadharFile = req.files['aadhar'] ? req.files['aadhar'][0].filename : null;
 
+    // Calculate paid fees
+    const paidfees = Number(fees) - Number(pendingfees);
+
+    // Create new registration record
     const newFile = await File.create({
-      name, dob, mobile, email, permanentadd, presentadd, pincode,
-      institutename, education, currentstatus, techopted, duration,
-      fees, pendingfees, referedby, photo: photoFile, aadhar: aadharFile
+      // Personal Information
+      name,
+      mobile,
+      dob: formatDate(dob),
+      gender,
+      email,
+      
+      // Address Information
+      permanentadd,
+      presentadd,
+      pincode,
+      
+      // Education Information
+      institutename,
+      education,
+      currentstatus,
+      
+      // Internship Information
+      techopted,
+      duration,
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      
+      // Financial Information
+      fees: Number(fees),
+      pendingfees: Number(pendingfees),
+      referedby,
+      
+      // Documents
+      photo: photoFile,
+      aadhar: aadharFile,
+      
+      // Set default status values
+      offerStatus: "pending",
+      status: "unreviewed",
+      completionStatus: "pending"
     });
 
-const paidfees = fees - pendingfees;
+    // Prepare email content
+    const currentDate = formatDate(new Date());
+    const rawDate = new Date();
+    const formattedDate = `${rawDate.getDate()}/${rawDate.getMonth() + 1}/${rawDate.getFullYear()}`;
 
-// const currentDate = new Date().toLocaleDateString(); // used for PDF text
-
-const currentDate = formatDate(new Date());
-
-// New raw Date object for formatting the mail date
-const rawDate = new Date();
-const formattedDate = `${rawDate.getDate()}/${rawDate.getMonth() + 1}/${rawDate.getFullYear()}`;
+    const nodemailer = require("nodemailer");
 
 
-    // const paidfees = fees - pendingfees;
-    // const currentDate = new Date();
 
-    // const formattedDate = `${currentDate.getDate()}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+const transporter = nodemailer.createTransport({
+  host: "smtp.hostinger.com",
+  port: 465, // or 587 if you use TLS
+  secure: true, // true for port 465, false for 587
+  auth: {
+    user: "hrteam@v-extechsolution.in", // your Hostinger email
+    pass: "Veer@2238",        // NOT your Hostinger login, just the email password
+  },
+});
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
+    // Email options
     const mailOptions = {
-
-
-      from: process.env.EMAIL_USER,
+      from: '"HR Team" <hrteam@v-extechsolution.in>',
       to: email,
       subject: `Registration | V-Ex Tech Solution`,
       html: `<div style="background-color: #f3f3f3; padding: 20px;">
-    <div style="background-color: #ffffff; border-radius: 10px; padding: 20px;">
-        <h1 style="text-align: center; font-size: 24px; color: #333;">V-Ex Tech Solution</h1>
-        <p style="color: #333; font-size: 18px;">Dear ${name},</p>
-        <p style="color: #333; font-size: 16px;">Thank you for registering with V-Ex Tech Solution!</p>
-        <p style="color: #333; font-size: 16px;">We sincerely appreciate your interest in our ${techopted} program and are delighted to welcome you to our learning community.</p>
-        
-        <div style="background-color: #f9f9f9; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0;">
-            <p style="color: #333; font-size: 16px; margin: 0;"><strong>Your registration details:</strong></p>
-            <ul style="list-style-type: none; padding-left: 0;">
-                <li><strong>Program:</strong> ${techopted}</li>
-                <li><strong>Duration:</strong> ${duration}</li>
-                <li><strong>Registration Date:</strong> ${formattedDate}</li>
-            </ul>
-        </div>
+        <div style="background-color: #ffffff; border-radius: 10px; padding: 20px;">
+            <h1 style="text-align: center; font-size: 24px; color: #333;">V-Ex Tech Solution</h1>
+            <p style="color: #333; font-size: 18px;">Dear ${name},</p>
+            <p style="color: #333; font-size: 16px;">Thank you for registering with V-Ex Tech Solution!</p>
+            <p style="color: #333; font-size: 16px;">We sincerely appreciate your interest in our ${techopted} program and are delighted to welcome you to our learning community.</p>
+            
+            <div style="background-color: #f9f9f9; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0;">
+                <p style="color: #333; font-size: 16px; margin: 0;"><strong>Your registration details:</strong></p>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li><strong>Program:</strong> ${techopted}</li>
+                    <li><strong>Duration:</strong> ${duration}</li>
+                    <li><strong>Start Date:</strong> ${formatDate(new Date(startDate))}</li>
+                    <li><strong>End Date:</strong> ${formatDate(new Date(endDate))}</li>
+                    <li><strong>Registration Date:</strong> ${formattedDate}</li>
+                </ul>
+            </div>
 
-        <p style="color: #333; font-size: 16px;">Our team will review your registration and contact you shortly with the next steps. We're committed to providing you with an exceptional learning experience.</p>
-        
-        <p style="color: #333; font-size: 16px;">Should you have any questions in the meantime, please don't hesitate to reach out to us.</p>
-        
-        <p style="color: #666; font-size: 16px;">Best regards,</p>
-        <p style="color: #666; font-size: 16px;">The V-Ex Tech Solution Team</p>
-        
-        <div style="margin-top: 20px;">
-            <a href="https://v-extechsolution.in" style="color: #3498db; font-size: 16px;">v-extechsolution.in</a><br><br>
-            <a href="mailto:veeragraval@v-extechsolution.in" style="color: #3498db; font-size: 16px;">veeragraval@v-extechsolution.in</a><br><br>
-            <a href="tel:9664768292" style="color: #3498db; font-size: 16px;">+91 9664768292</a>
+            <p style="color: #333; font-size: 16px;">Our team will review your registration and contact you shortly with the next steps. We're committed to providing you with an exceptional learning experience.</p>
+            
+            <p style="color: #333; font-size: 16px;">Should you have any questions in the meantime, please don't hesitate to reach out to us.</p>
+            
+            <p style="color: #666; font-size: 16px;">Best regards,</p>
+            <p style="color: #666; font-size: 16px;">The V-Ex Tech Solution Team</p>
+            
+            <div style="margin-top: 20px;">
+                <a href="https://v-extechsolution.in" style="color: #3498db; font-size: 16px;">v-extechsolution.in</a><br><br>
+                <a href="mailto:veeragraval@v-extechsolution.in" style="color: #3498db; font-size: 16px;">veeragraval@v-extechsolution.in</a><br><br>
+                <a href="tel:9664768292" style="color: #3498db; font-size: 16px;">+91 9664768292</a>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <a href="https://www.linkedin.com/company/v-ex-tech-software-company-in-vadodara/mycompany/" style="text-decoration: none; color: #333; padding:0 14px;">
+                    <img src="https://i.ibb.co/1MpdrG8/download-1.png" alt="LinkedIn" style="width: 15%;">
+                </a>
+                <a href="https://www.youtube.com/@Veer_Agraval" style="text-decoration: none; color: #333; padding:0 14px;">
+                    <img src="https://i.ibb.co/b60S7TZ/download.png" alt="YouTube" style="width: 15%;">
+                </a>
+                <a href="https://www.instagram.com/v_extech/?igshid=Zjc2ZTc4Nzk%3D" style="text-decoration: none; color: #333; padding:0 14px;">
+                    <img src="https://i.ibb.co/xYLHv49/download.jpg" alt="Instagram" style="width: 15%;">
+                </a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px; margin-top: 20px; text-align: center;">
+                Dhun Complex-301, Above Riya Bridal, near Amritsari Kulcha,<br>
+                opp. Pavan Park Society, Nizampura, Vadodara, Gujarat 390002
+            </p>
         </div>
-        
-        <div style="margin-top: 20px; text-align: center;">
-            <a href="https://www.linkedin.com/company/v-ex-tech-software-company-in-vadodara/mycompany/" style="text-decoration: none; color: #333; padding:0 14px;">
-                <img src="https://i.ibb.co/1MpdrG8/download-1.png" alt="LinkedIn" style="width: 15%;">
-            </a>
-            <a href="https://www.youtube.com/@Veer_Agraval" style="text-decoration: none; color: #333; padding:0 14px;">
-                <img src="https://i.ibb.co/b60S7TZ/download.png" alt="YouTube" style="width: 15%;">
-            </a>
-            <a href="https://www.instagram.com/v_extech/?igshid=Zjc2ZTc4Nzk%3D" style="text-decoration: none; color: #333; padding:0 14px;">
-                <img src="https://i.ibb.co/xYLHv49/download.jpg" alt="Instagram" style="width: 15%;">
-            </a>
-        </div>
-        
-        <p style="color: #666; font-size: 14px; margin-top: 20px; text-align: center;">
-            Dhun Complex-301, Above Riya Bridal, near Amritsari Kulcha,<br>
-            opp. Pavan Park Society, Nizampura, Vadodara, Gujarat 390002
-        </p>
-    </div>
-</div>
-     `,
+    </div>`
     };
 
+    // Send email
     const info = await transporter.sendMail(mailOptions);
     console.log('Email sent:', info.response);
 
-    res.json({ success: true, message: 'Thanks, registration details have been sent' });
+    res.json({ 
+      success: true, 
+      message: 'Thanks, registration details have been sent',
+      data: {
+        registrationId: newFile._id,
+        name,
+        email,
+        program: techopted
+      }
+    });
 
   } catch (err) {
     console.error("Error saving file to database:", err);
-    res.json({ success: false, error: 'Please try again' });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Registration failed. Please try again.',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
-
 
 
 // POST route to generate and send invoice for a specific student
@@ -221,15 +266,18 @@ const formattedDate = currentDate;
     fs.writeFileSync(pdfPath, pdfBytes);
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+  host: "smtp.hostinger.com",
+  port: 465, // or 587 if you use TLS
+  secure: true, // true for port 465, false for 587
+  auth: {
+    user: "hrteam@v-extechsolution.in", // your Hostinger email
+    pass: "Veer@2238",        // NOT your Hostinger login, just the email password
+  },
+});
 
+    // Email options
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: '"HR Team" <hrteam@v-extechsolution.in>',
       to: email,
       subject: `Receipt for Your Registration | V-Ex Tech Solution`,
       attachments: [
@@ -415,15 +463,18 @@ nameLines.forEach((line, i) => {
     fs.writeFileSync(pdfPath, pdfBytes);
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+  host: "smtp.hostinger.com",
+  port: 465, // or 587 if you use TLS
+  secure: true, // true for port 465, false for 587
+  auth: {
+    user: "hrteam@v-extechsolution.in", // your Hostinger email
+    pass: "Veer@2238",        // NOT your Hostinger login, just the email password
+  },
+});
 
+    // Email options
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: '"HR Team" <hrteam@v-extechsolution.in>',
       to: email,
       subject: `Internship Offer Letter | V-Ex Tech Solution`,
       html: `
@@ -575,15 +626,18 @@ appreciationLines.forEach((line, i) => {
 
     // Send email with attachment
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+  host: "smtp.hostinger.com",
+  port: 465, // or 587 if you use TLS
+  secure: true, // true for port 465, false for 587
+  auth: {
+    user: "hrteam@v-extechsolution.in", // your Hostinger email
+    pass: "Veer@2238",        // NOT your Hostinger login, just the email password
+  },
+});
 
+    // Email options
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: '"HR Team" <hrteam@v-extechsolution.in>',
       to: email,
       subject: `Internship Completion Certificate | V-Ex Tech Solution`,
       html: `
