@@ -20,8 +20,6 @@ import landingTextRoute from './routes/landingText.js';
 import collegeRoutes from './routes/college.js';
 import projectRoutes from './routes/projectRoutes.js';
 
-import uploadRoute from "./routes/upload.js";
-
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,8 +49,6 @@ app.use('/api/students', studentRoutes);
 app.use("/api/landing-text", landingTextRoute);
 app.use("/api/colleges", collegeRoutes);
 app.use('/api/projects', projectRoutes);
-
-app.use("/api/upload", uploadRoute);
 
 // Primary DB connection (from .env)
 mongoose
