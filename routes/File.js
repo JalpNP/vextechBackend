@@ -684,13 +684,19 @@ router.get('/api/get-file-data', async (req, res) => {
 });
 
 
-router.put('/api/update-file/:id', upload.single('photo'), async (req, res) => {
+router.put('/api/update-file/:id', upload.fields([
+  { name: 'photo', maxCount: 1 },
+  { name: 'aadhar', maxCount: 1 },
+]), async (req, res) => {
   try {
-    const updateData = req.body;
+    const updateData = { ...req.body };
 
-    // If a new image was uploaded, set it in the update data
-    if (req.file) {
-      updateData.photo = req.file.filename;
+    if (req.files.photo) {
+      updateData.photo = req.files.photo[0].filename;
+    }
+
+    if (req.files.aadhar) {
+      updateData.aadhar = req.files.aadhar[0].filename;
     }
 
     const updated = await File.findByIdAndUpdate(req.params.id, updateData, {
