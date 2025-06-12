@@ -537,12 +537,12 @@ router.post('/api/send-completion/:id', async (req, res) => {
     if (!student) return res.status(404).json({ error: "Student not found" });
 
     const {
-      name, email, techopted, institutename,
+      name, email, techopted, institutename, startDate, endDate,
       completionDate: dbCompletionDate,
       completionTo: dbCompletionTo,
       completionName: dbCompletionName,
-      completionStartDate: dbCompletionStartDate,
-      completionEndDate: dbCompletionEndDate,
+      completionStartDate: dbcompletionStartDate,
+      completionEndDate: dbcompletionEndDate,
       workSummary: dbWorkSummary,
       performance: dbPerformance,
       appreciation: dbAppreciation
@@ -584,7 +584,7 @@ completionToLines.forEach((line, i) => {
 
 
 
-    const clarifyPara = `This is to clarify that ${name}, a student of ${institutename}, has successfully completed internship in ${techopted} at V-Ex Tech Solution from ${formatDate(dbCompletionStartDate)} to ${formatDate(dbCompletionEndDate)}.`;
+    const clarifyPara = `This is to clarify that ${name}, a student of ${institutename}, has successfully completed internship in ${techopted} at V-Ex Tech Solution from ${dbcompletionStartDate} to ${dbcompletionEndDate}.`;
 const clarifyLines = wrapText(clarifyPara, PoppinsFont, 10, 480);
 
 let clarifyStartY = 480;
@@ -604,7 +604,7 @@ wrappedLines.forEach((line, i) => {
 
 const lines = wrapText(dbPerformance || "N/A", PoppinsFont, 10, 480);
 
-let startYAxis = 340;
+let startYAxis = 343;
 lines.forEach((line, i) => {
   drawText(firstPage, line, 50, startYAxis - i * 18);
 });
@@ -642,7 +642,7 @@ appreciationLines.forEach((line, i) => {
       subject: `Internship Completion Certificate | V-Ex Tech Solution`,
       html: `
         <p>Dear ${name},</p>
-        <p>Congratulations on successfully completing your <strong>${techopted}</strong> internship at V-Ex Tech Solution from <strong>${formatDate(dbCompletionStartDate)}</strong> to <strong>${formatDate(dbCompletionEndDate)}</strong>.</p>
+        <p>Congratulations on successfully completing your <strong>${techopted}</strong> internship at V-Ex Tech Solution from <strong>${dbcompletionStartDate}</strong> to <strong>${dbcompletionEndDate}</strong>.</p>
         <p>Please find your completion certificate attached.</p>
         <p>Best regards,<br/>V-Ex Tech Solution Team</p>
       `,
