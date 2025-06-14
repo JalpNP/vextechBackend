@@ -582,9 +582,11 @@ completionToLines.forEach((line, i) => {
 
 
 
+const actualStartDate = completionStartDate || startDate;
+const actualEndDate = completionEndDate || endDate;
 
 
-    const clarifyPara = `This is to clarify that ${name}, a student of ${institutename}, has successfully completed internship in ${techopted} at V-Ex Tech Solution from ${dbcompletionStartDate} to ${dbcompletionEndDate}.`;
+    const clarifyPara = `This is to clarify that ${name}, a student of ${institutename}, has successfully completed internship in ${techopted} at V-Ex Tech Solution from ${actualStartDate} to ${actualEndDate}.`;
 const clarifyLines = wrapText(clarifyPara, PoppinsFont, 10, 480);
 
 let clarifyStartY = 480;
@@ -604,7 +606,7 @@ wrappedLines.forEach((line, i) => {
 
 const lines = wrapText(dbPerformance || "N/A", PoppinsFont, 10, 480);
 
-let startYAxis = 343;
+let startYAxis = 332;
 lines.forEach((line, i) => {
   drawText(firstPage, line, 50, startYAxis - i * 18);
 });
@@ -642,7 +644,7 @@ appreciationLines.forEach((line, i) => {
       subject: `Internship Completion Certificate | V-Ex Tech Solution`,
       html: `
         <p>Dear ${name},</p>
-        <p>Congratulations on successfully completing your <strong>${techopted}</strong> internship at V-Ex Tech Solution from <strong>${dbcompletionStartDate}</strong> to <strong>${dbcompletionEndDate}</strong>.</p>
+        <p>Congratulations on successfully completing your <strong>${techopted}</strong> internship at V-Ex Tech Solution from <strong>${actualStartDate}</strong> to <strong>${actualEndDate}</strong>.</p>
         <p>Please find your completion certificate attached.</p>
         <p>Best regards,<br/>V-Ex Tech Solution Team</p>
       `,
